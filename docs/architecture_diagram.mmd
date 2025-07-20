@@ -1,0 +1,54 @@
+flowchart LR
+  %% Client
+  Client([Client])
+
+  %% API Layer
+  API["API Service"]
+
+  %% Coordinator Service
+  COORD["Coordinator Service"]
+
+  %% Embedding Service
+  EMBED["Embedding Service"]
+
+  %% Config Service with DB
+  subgraph CONFIG_GROUP["Config Service"]
+    direction TB
+    CONFIG
+    CONFIG_DB["Config DB"]
+  end
+
+  %% Infrastructure
+  OBJ_STORE["Object Store"]
+  VECTOR_DB["Vector DB"]
+  STATUS_DB["Workflow DB"]
+
+  %% Client to API
+  Client -->|"Upload image"| API
+  Client -->|"Get image by id"| API
+  Client -->|"Get similar images"| API
+
+  %% API actions
+  API -->|"Store image"| OBJ_STORE
+  API -->|"Submit job to Coordinator"| COORD
+  API -->|"Query job status"| COORD
+  API -->|"Query similar vectors"| VECTOR_DB
+  API -->|"Fetch image"| OBJ_STORE
+  API -->|"Fetch config"| CONFIG
+
+  %% Coordinator logic
+  COORD -->|"Track job status"| STATUS_DB
+  COORD -->|"Read job status"| STATUS_DB
+  COORD -->|"Fetch config"| CONFIG
+  COORD -->|"Download image from"| OBJ_STORE
+  COORD -->|"Send to embedding service"| EMBED
+  COORD -->|"Store vector"| VECTOR_DB
+
+  %% Styling
+  style API fill:#bbf,stroke:#333,stroke-width:1px
+  style COORD fill:#bfb,stroke:#333,stroke-width:1px
+  style CONFIG_GROUP fill:#ddd,stroke:#333,stroke-width:1px
+  style EMBED fill:#ffb,stroke:#333,stroke-width:1px
+  style OBJ_STORE fill:#eee,stroke:#333,stroke-width:1px
+  style VECTOR_DB fill:#eee,stroke:#333,stroke-width:1px
+  style STATUS_DB fill:#eee,stroke:#333,stroke-width:1px
