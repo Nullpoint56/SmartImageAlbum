@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  participant Client
+  participant API as API Service
+  participant OBJ as Object Store
+  participant COORD as Coordinator Service
+  participant CONFIG as Config Service
+  participant EMBED as Embedding Service
+  participant VECTOR as Vector DB
+  participant STATUS as Workflow DB
+
+  Client->>API: POST /images/upload (image file)
+  API->>OBJ: Upload image to Object Store
+  API->>COORD: Submit processing job (image_id)
+
+  COORD->>STATUS: Set status = "pending"
+  COORD->>OBJ: Download image (pre-signed URL or direct)
+  COORD->>STATUS: Set status = "embedding"
+
+  COORD->>EMBED: Send image bytes
+  EMBED-->>COORD: Return embedding vector
+
+  COORD->>STATUS: Set status = "indexing"
+  COORD->>VECTOR: Insert embedding vector (image_id, vector)
+
+  COORD->>STATUS: Set status = "done"

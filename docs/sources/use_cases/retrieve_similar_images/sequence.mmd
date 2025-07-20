@@ -1,0 +1,12 @@
+sequenceDiagram
+  autonumber
+  participant Client
+  participant API as API Service
+  participant VECTOR as Vector DB
+
+  Client->>API: GET /images/{image_id}/similar
+  API->>VECTOR: Fetch embedding vector by image_id
+  VECTOR-->>API: Return vector
+  API->>VECTOR: Submit vector for similarity search
+  VECTOR-->>API: Return similar image_ids + scores
+  API-->>Client: Return similar images with scores
