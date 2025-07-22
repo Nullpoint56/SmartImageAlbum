@@ -17,8 +17,8 @@ Handles client-facing HTTP endpoints for image upload, metadata retrieval, and s
 **Endpoints:**
 
 * `POST /images/upload`: Upload an image and initiate processing
-* `GET /images/{image_id}`: Retrieve image metadata and extracted features
-* `GET /images/{image_id}/similar`: Return visually similar images
+* `GET /images/{id}`: Retrieve image metadata and extracted features
+* `GET /images/{id}/similar`: Return visually similar images
 * `GET /health`: Health check
 
 **Responsibilities:**
@@ -44,6 +44,8 @@ Acts as the orchestrator for all image processing workflows.
 **Endpoints:**
 
 * `GET /health`: Health check
+* `POST /jobs`: Create an image processing job
+* `GET /jobs/{id}/status`: Get the status of the image processing job
 
 **Note:** This service is designed to be a candidate for replacement by Temporal or another workflow engine in the
 future.
@@ -61,7 +63,7 @@ Processes images into vector embeddings using a pretrained CLIP model.
 
 **Endpoints:**
 
-* `POST /encode`&#x20;
+* `POST /encode`: Send an image and receive the embedding of it
 * `GET /health`: Health check
 
 ---
@@ -74,11 +76,11 @@ Manages runtime configuration parameters for the Coordinator and API Service.
 
 * Provide runtime configurable parameters for services
 
-**Internal DB:** `Config DB`&#x20;
+**Internal DB:** `Config DB`
 
 **Endpoints:**
 
-* `GET /config`: Return current config
+* `GET /config/{partition}`: Return current config of the specified config partition
 * `GET /health`: Health check
 
 ---
