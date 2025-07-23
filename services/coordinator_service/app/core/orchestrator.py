@@ -1,0 +1,24 @@
+from sqlalchemy import UUID
+
+from app.core.utils import download_image, embed_image, store_vector
+from app.dependencies import async_session
+from app.models.job import Job, JobStatus
+
+
+async def run_job_fsm(job_id: UUID):
+    async with async_session() as db:
+        job = await Job.get(db, job_id)
+        if not job:
+            return
+
+        try:
+            await job.update_status(db, JobStatus.processing)
+
+            image_bytes = await download_image(job.image_url)
+            embedding = await embed_image(image_bytes)
+            await store_vector(job.id, embedding)
+
+            await job.update_status(db, JobStatus.done)
+
+        except Exception as e:
+            await job.update_status(db, JobStatus.error, detail=str(e))

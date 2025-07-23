@@ -1,6 +1,14 @@
 [project]
-name = "smartimagealbum"
+name = "coordinator_service"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "sqlalchemy",
+    "fastapi",
+    "httpx",
+    "uvicorn",
+    "asyncpg",
+    "aiosqlite>=0.21.0",
+    "pytest>=8.4.1",
+]
