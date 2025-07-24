@@ -1,0 +1,27 @@
+sequenceDiagram
+  autonumber
+  participant Client
+  participant API as API Service
+  participant OBJ as Object Store
+  participant WORKER as Worker Service
+  participant EMBED as Embedding Service
+  participant EMBEDDB as Embedding DB
+  participant VECTOR as Vector DB
+  participant DB as Backend DB
+
+  Client->>API: POST /images/upload
+  API->>OBJ: Upload image to Object Store
+  API->>DB: Create Image instance
+  API->>WORKER: Submit process image job
+
+  WORKER->>DB: Create job: status = "created", state = "none"
+  WORKER->>DB: Update status = "pending", state = "embedding"
+  WORKER->>EMBED: Send image to embed
+
+  EMBED->>OBJ: Download image
+  EMBED->>EMBEDDB: Store enbedding
+  EMBED->>WORKER: Return embedding vector
+
+  WORKER->>DB: Update state = "indexing"
+  WORKER->>VECTOR: Insert vector
+  WORKER->>DB: Update status = "done", state = "completed"
