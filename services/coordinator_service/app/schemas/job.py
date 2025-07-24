@@ -1,15 +1,20 @@
 from uuid import UUID
 
-from pydantic import BaseModel, HttpUrl
-from typing import Literal
+from pydantic import BaseModel, HttpUrl, ConfigDict
+
+from app.models.job import JobStatus, JobState
+
 
 class JobCreateRequest(BaseModel):
     image_url: HttpUrl
 
 class JobCreateResponse(BaseModel):
-    job_id: UUID
+    id: UUID
 
 class JobStatusResponse(BaseModel):
-    job_id: UUID
-    status: Literal["pending", "processing", "done", "error"]
+    id: UUID
+    status: JobStatus
+    state: JobState
     detail: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)

@@ -23,7 +23,7 @@ async def submit_job(
 
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content={"job_id": str(job.id)},
+        content={"id": str(job.id)},
         headers={"Location": f"/jobs/{job.id}/status"}
     )
 
@@ -32,4 +32,4 @@ async def job_status(job_id: UUID, db: AsyncSession = Depends(get_db)):
     job = await Job.get(db, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
-    return JobStatusResponse(job_id=job.id, status=job.status, detail=job.detail)
+    return JobStatusResponse.model_validate(job)

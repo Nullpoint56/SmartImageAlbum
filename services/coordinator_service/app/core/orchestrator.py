@@ -2,7 +2,7 @@ from sqlalchemy import UUID
 
 from app.core.utils import download_image, embed_image, store_vector
 from app.dependencies import async_session
-from app.models.job import Job, JobStatus
+from app.models.job import Job, JobStatus, JobState
 
 
 async def run_job_fsm(job_id: UUID):
@@ -12,13 +12,15 @@ async def run_job_fsm(job_id: UUID):
             return
 
         try:
-            await job.update_status(db, JobStatus.processing)
-
+            await job.update_status(db, JobStatus.PENDING)
+            await job.update_state(db, JobState.EMBEDDING)
             image_bytes = await download_image(job.image_url)
             embedding = await embed_image(image_bytes)
+            await job.update_state(db, JobState.INDEXING)
             await store_vector(job.id, embedding)
 
-            await job.update_status(db, JobStatus.done)
+            await job.update_status(db, JobStatus.DONE)
+            await job.update_state(db, JobState.COMPLETED)
 
         except Exception as e:
-            await job.update_status(db, JobStatus.error, detail=str(e))
+            await job.update_status(db, JobStatus.ERROR, detail=str(e))
