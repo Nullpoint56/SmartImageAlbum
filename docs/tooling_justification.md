@@ -23,7 +23,7 @@ in the [Architecture Documentation](./architecture_documentation.md) and project
 
 ### 🔄 Alternatives Considered
 
-* **PostgreSQL + pgvector**: Simpler integration, but limited performance and scalability.
+* **PostgreSQL + pgvector**: Simpler integration, but limited performance and scalability + harder to set up
 * **Weaviate**: Powerful, but heavier and less flexible in self-hosted environments.
 
 ---

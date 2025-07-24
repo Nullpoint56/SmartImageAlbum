@@ -29,7 +29,7 @@ Handles client-facing HTTP endpoints for image upload, metadata retrieval, and s
 
 ---
 
-### 2. **Coordinator Service (Custom Async Service)**
+### 2. **Coordinator Service (FastAPI)**
 
 Acts as the orchestrator for all image processing workflows.
 
@@ -52,7 +52,7 @@ future.
 
 ---
 
-### 3. Embedding Service
+### 3. Embedding Service (FastAPI)
 
 Processes images into vector embeddings using a pretrained CLIP model.
 
@@ -68,24 +68,7 @@ Processes images into vector embeddings using a pretrained CLIP model.
 
 ---
 
-### 4. **Config Service**
-
-Manages runtime configuration parameters for the Coordinator and API Service.
-
-**Responsibilities:**
-
-* Provide runtime configurable parameters for services
-
-**Internal DB:** `Config DB`
-
-**Endpoints:**
-
-* `GET /config/{partition}`: Return current config of the specified config partition
-* `GET /health`: Health check
-
----
-
-### 5. Object Store
+### 4. Object Store (MinIO)
 
 Stores uploaded image files.
 
@@ -96,7 +79,7 @@ Stores uploaded image files.
 
 ---
 
-### 6. Vector DB
+### 5. Vector DB (Qdrant)
 
 Stores and indexes embedding vectors for similarity search.
 
@@ -107,7 +90,7 @@ Stores and indexes embedding vectors for similarity search.
 
 ---
 
-### 7. Workflow DB
+### 6. Workflow DB (PostrgeSQL)
 
 Tracks the state of image processing jobs.
 
