@@ -1,10 +1,10 @@
-# app/services/db.py
-
 import uuid
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+
+from config import settings
 from shared.db_models import Image, ImageProcessingJob, JobStatus
 
 from minio import Minio
