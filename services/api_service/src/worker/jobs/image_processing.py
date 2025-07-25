@@ -1,10 +1,3 @@
-from sqlalchemy import UUID
-
-from app.core.utils import download_image, embed_image, store_vector
-from app.dependencies import async_session
-from app.models.job import Job, JobStatus, JobState
-
-
 async def run_job_fsm(job_id: UUID):
     async with async_session() as db:
         job = await Job.get(db, job_id)

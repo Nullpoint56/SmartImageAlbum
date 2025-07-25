@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 
-app = FastAPI(title="API Service", version="1.0")
+from dependencies import lifespan
+from routers import images, health
 
-app.include_router(images_router)
+app = FastAPI(title="Image API Service", lifespan=lifespan)
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+# Register routers
+app.include_router(health.router)
+app.include_router(images.router, prefix="/images")
