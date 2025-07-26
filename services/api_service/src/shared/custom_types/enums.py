@@ -3,12 +3,11 @@ import enum
 
 class JobStatus(str, enum.Enum):
     CREATED = "created"
-    PENDING = "pending"
+    PROCESSING = "processing"
     DONE = "done"
     ERROR = "error"
 
-class JobState(str, enum.Enum):
-    NONE = "none"
+class JobStepName(str, enum.Enum):
     EMBEDDING = "embedding"
     INDEXING = "indexing"
     COMPLETED = "completed"

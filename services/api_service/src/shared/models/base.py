@@ -2,5 +2,4 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 class Base(DeclarativeBase):
-    """Shared declarative base for all SQLAlchemy models"""
-    pass
+    """Base class for ORM models."""

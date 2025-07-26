@@ -1,6 +1,13 @@
 [project]
-name = "worker"
+name = "celery_workers"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "celery>=5.5.3",
+    "minio>=7.2.16",
+    "sqlalchemy>=2.0.41",
+    "psycopg3",
+    "pydantic",
+    "qdrant-client"
+]
