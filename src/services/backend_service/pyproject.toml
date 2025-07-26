@@ -1,0 +1,14 @@
+[project]
+name = "api_service"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "minio",
+    "pydantic-settings",
+    "sqlalchemy",
+    "python-multipart",
+    "alembic",
+    "uvicorn"
+]
