@@ -13,7 +13,7 @@ embed_router = APIRouter(prefix="", tags=["embedding"])
 
 @embed_router.post("/encode")
 async def encode_image(
-    file: UploadFile = File(...),
+
     deps: tuple[CLIPModel, CLIPProcessor, torch.device] = Depends(get_model_and_processor),
 ) -> JSONResponse:
     """
