@@ -146,7 +146,7 @@ async def get_similar_images(
     # 2. Use query_points for similarity search (replacement for search)
     response = await qdrant.query_points(
         collection_name=config.vector_db.collection,
-        query_vector=query_vector,
+        query=query_vector,
         limit=config.vector_db.top_k + 1,
         with_vectors=False,
         with_payload=True,
