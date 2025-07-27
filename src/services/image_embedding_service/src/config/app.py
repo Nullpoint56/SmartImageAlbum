@@ -1,10 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from config.embedding import EmbeddingConfig
+from config.embedding import EmbedderSettings
 
 
 class AppConfig(BaseSettings):
-    embedder: EmbeddingConfig
+    embedder: EmbedderSettings
 
     model_config = SettingsConfigDict(
         env_file="app.env",

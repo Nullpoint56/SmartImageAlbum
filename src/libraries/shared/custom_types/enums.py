@@ -11,3 +11,8 @@ class JobStepName(str, enum.Enum):
     EMBEDDING = "embedding"
     INDEXING = "indexing"
     COMPLETED = "completed"
+
+class DistanceMetric(str, enum.Enum):
+    COSINE = "cosine"
+    EUCLID = "euclid"
+    DOT = "dot"

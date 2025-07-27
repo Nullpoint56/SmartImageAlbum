@@ -8,13 +8,14 @@ authors = [
 dependencies = [
     "fastapi",
     "uvicorn[standard]",
-    "transformers[torch]",
+    "transformers",
     "torch==2.6.0+cpu",
     "Pillow",
-    "python-multipart",
-    "aiohttp>=3.12.14",
-    "pydantic-settings>=2.1.0",
+    "numpy",
+    "pydantic-settings",
+    "aiohttp",
 ]
+
 
 requires-python = ">=3.11.0"
 

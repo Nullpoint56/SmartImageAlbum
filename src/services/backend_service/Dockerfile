@@ -1,25 +1,24 @@
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS final
 
-WORKDIR /src
+WORKDIR /app
 
-# Copy only project metadata for dependency install
-COPY pyproject.toml .
+# Copy code
+COPY src/libraries/shared ./shared
+COPY src/services/backend_service/pyproject.toml ./backend/
 
-# Install dependencies into system site-packages (required for Docker)
-RUN uv pip install -e . --system && python -m pip install alembic
+# Install
+RUN uv pip install ./shared --system
+RUN uv pip install -e ./backend --system
 
-# Copy the source code
-COPY . .
+COPY src/services/backend_service/src ./backend
 
-# Copy and set up entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Entrypoint
+COPY src/services/backend_service/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-# Ensure logs dir exists (optional)
-RUN mkdir -p logs
+# Python import roots
+ENV PYTHONPATH=/app/backend:/app/shared
 
-# Set PYTHONPATH so `import app` and `import shared` work
-ENV PYTHONPATH=/src
+# Run entrypoint (note: alembic.ini lives inside backend)
+CMD ["./entrypoint.sh"]
 
-# Use entrypoint script to handle migration + app launch
-CMD ["/entrypoint.sh"]

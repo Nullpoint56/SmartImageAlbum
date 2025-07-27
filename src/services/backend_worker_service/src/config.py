@@ -1,29 +1,21 @@
 from typing import Optional
-from pydantic_settings import BaseSettings
-from pydantic import Field, AnyUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
+from shared.config.object_store import ObjectStoreSettings
+from shared.config.embedder import EmbedderClientSettings
+from shared.config.vector_db import VectorDBSettings
+from shared.config.db import DBSettings
 
 
 class WorkerConfig(BaseSettings):
-    # Celery
     celery_broker_url: Optional[str] = Field(None, alias="CELERY_BROKER_URL")
+    object_store: ObjectStoreSettings
+    embedder_client: EmbedderClientSettings
+    vector_db: VectorDBSettings
+    db: DBSettings
 
-    # MinIO
-    minio_endpoint: Optional[str] = None
-    minio_access_key: Optional[str] = None
-    minio_secret_key: Optional[str] = None
-    minio_secure: bool = Field(False)
-
-    # Embedder
-    embedder_base_url: Optional[AnyUrl] = None
-
-    # Qdrant
-    qdrant_host: str = "localhost"
-    qdrant_port: int = 6333
-    qdrant_https: bool = False
-
-    # Database
-    app_database_url: Optional[AnyUrl] = Field(None, alias="DB__APP_DATABASE_URL")
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file="app/app.env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__"
+    )

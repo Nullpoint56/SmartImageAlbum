@@ -4,10 +4,12 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
-    "celery>=5.5.3",
-    "minio>=7.2.16",
-    "sqlalchemy>=2.0.41",
-    "psycopg3",
+    "celery",
+    "minio",
+    "sqlalchemy",
+    "psycopg2-binary",
     "pydantic",
-    "qdrant-client"
+    "qdrant-client",
+    "pydantic-settings",
+    "redis"
 ]

@@ -9,13 +9,13 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy only dependency metadata
-COPY pyproject.toml poetry.lock* ./
+COPY src/services/image_embedding_service/pyproject.toml ./pyproject.toml
 
 # Install all dependencies into system site-packages (required for uv + Docker)
 RUN uv pip install . --system
 
 # Copy the actual source code
-COPY src ./src
+COPY src/services/image_embedding_service/src ./src
 
 # Set environment variables
 ENV PYTHONPATH=/app/src
@@ -23,4 +23,4 @@ ENV TRANSFORMERS_NO_TF=1
 ENV TRANSFORMERS_CACHE=/app/.cache
 
 # Run the FastAPI app via uvicorn (as a module to ensure correct loading)
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]

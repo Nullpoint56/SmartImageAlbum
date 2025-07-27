@@ -1,49 +1,55 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from qdrant_client import QdrantClient
+from functools import cached_property
+
 from minio import Minio
+from qdrant_client import QdrantClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
+from config import WorkerConfig
 from shared.clients.embedder import EmbedderClient
-from worker.config import WorkerConfig
-
-_engine = None
-_SessionLocal = None
-_qdrant_client = None
 
 
-def get_minio_client(config: WorkerConfig) -> Minio:
-    return Minio(
-        endpoint=config.minio_endpoint,
-        access_key=config.minio_access_key,
-        secret_key=config.minio_secret_key,
-        secure=config.minio_secure,
-    )
+class WorkerContext:
+    """Central place for all worker service dependencies."""
 
+    def __init__(self, config: WorkerConfig):
+        self.config = config
 
-def get_embedder_client(config: WorkerConfig) -> EmbedderClient:
-    return EmbedderClient(base_url=config.embedder_base_url)
+        # Database engine and session factory
+        self._engine = None
+        self._SessionLocal = None
 
-
-def get_qdrant_client(config: WorkerConfig) -> QdrantClient:
-    global _qdrant_client
-    if _qdrant_client is None:
-        _qdrant_client = QdrantClient(
-            host=config.qdrant_host,
-            port=config.qdrant_port,
-            https=config.qdrant_https,
+    @cached_property
+    def minio(self) -> Minio:
+        cfg = self.config.object_store
+        return Minio(
+            endpoint=cfg.endpoint,
+            access_key=cfg.access_key,
+            secret_key=cfg.secret_key,
+            secure=cfg.secure,
         )
-    return _qdrant_client
 
+    @cached_property
+    def embedder(self) -> EmbedderClient:
+        return EmbedderClient(base_url=self.config.embedder_client.base_url)
 
-def get_engine(config: WorkerConfig):
-    global _engine
-    if _engine is None:
-        _engine = create_engine(str(config.app_database_url), echo=False, future=True)
-    return _engine
+    @cached_property
+    def qdrant(self) -> QdrantClient:
+        cfg = self.config.vector_db
+        return QdrantClient(
+            host=cfg.host,
+            port=cfg.port,
+            https=cfg.port == 443 or cfg.host.startswith("https")
+        )
 
+    @cached_property
+    def db(self) -> Session:
+        """Returns a SQLAlchemy session (use `.close()` manually after use)."""
+        if self._SessionLocal is None:
+            self._engine = create_engine(str(self.config.db.url), future=True, echo=False)
+            self._SessionLocal = sessionmaker(bind=self._engine, autoflush=False, autocommit=False)
+        return self._SessionLocal()
 
-def get_session(config: WorkerConfig) -> Session:
-    global _SessionLocal
-    if _SessionLocal is None:
-        _SessionLocal = sessionmaker(bind=get_engine(config), autoflush=False, autocommit=False)
-    return _SessionLocal()
+    def close(self) -> None:
+        """Closes the active SQLAlchemy session."""
+        self.db.close()

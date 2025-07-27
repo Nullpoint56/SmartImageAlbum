@@ -1,5 +1,5 @@
 [project]
-name = "api_service"
+name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
@@ -9,6 +9,10 @@ dependencies = [
     "pydantic-settings",
     "sqlalchemy",
     "python-multipart",
-    "alembic",
-    "uvicorn"
+    "uvicorn",
+    "python-dotenv",
+    "asyncpg",
+    "qdrant-client",
+    "celery",
+    "redis"
 ]

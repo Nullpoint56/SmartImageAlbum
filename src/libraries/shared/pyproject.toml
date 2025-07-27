@@ -1,5 +1,5 @@
 [project]
-name = "src"
+name = "shared"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
@@ -7,3 +7,6 @@ dependencies = [
     "sqlalchemy>=2.0.41",
     "httpx"
 ]
+
+[tool.setuptools]
+packages = ["clients", "custom_types", "models"]

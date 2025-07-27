@@ -3,32 +3,37 @@ from typing import Annotated
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from minio import Minio
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from backend_service.dependencies.db import get_db_session
-from backend_service.dependencies.object_store import get_object_store_client
-from backend_service.dependencies.vector_db import get_vector_db_client
-from backend_service.schemas.images import ScoredImageSchema
-from backend_service.utils import upload_file_to_minio, send_celery_task_async
-from shared.models.image import Image, ImageMetadata
+from config.app import AppConfig, get_app_config
+from dependencies.db import get_db_session
+from dependencies.object_store import get_object_store_client
+from dependencies.vector_db import get_vector_db_client
+from schemas.images import ScoredImageSchema, ImageSchema, ImageFeaturesSchema, ImageMetadataSchema
+from shared.models import Image
+from shared.models.image import ImageMetadata
+from utils import send_celery_task_async, upload_file_to_minio
 
 router = APIRouter()
 
 
 @router.post("/images/upload", response_model=dict)
 async def upload_image(
-    file: Annotated[UploadFile, File(...)],
-    db: Annotated[AsyncSession, Depends(get_db_session)],
-    # minio_client: Annotated[Minio, Depends(get_object_store_client)]
+        file: Annotated[UploadFile, File(...)],
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        minio_client: Annotated[Minio, Depends(get_object_store_client)],
+        config: Annotated[AppConfig, Depends(get_app_config)]
 ):
     image_id = uuid.uuid4()
     ext = file.filename.split(".")[-1]
-    object_key = f"uploads/{image_id}.{ext}"
+    object_key = f"{config.object_store.bucket}/{image_id}.{ext}"
 
     try:
-        print("Image uploaded mock")
-        # await upload_file_to_minio(minio_client, file, object_key, file.content_type)
+        await upload_file_to_minio(minio_client, file, config.object_store.bucket, object_key)
 
         # Create the Image record
         image = Image(
@@ -47,7 +52,7 @@ async def upload_image(
         db.add_all([image, metadata])
         await db.commit()
 
-        await send_celery_task_async("process_image", args=(str(image_id), object_key))
+        await send_celery_task_async("process_image", str(image_id))
 
         return {"id": str(image_id)}
     except Exception as e:
@@ -57,45 +62,110 @@ async def upload_image(
         )
 
 
-@router.get("/images/{image_id}/similar", response_model=list[ScoredImageSchema])
-async def get_similar_images(
+@router.get("/images/{image_id}", response_model=ImageSchema)
+async def get_image(
         image_id: uuid.UUID,
-        top_k: int = 5,
-        qdrant=Depends(get_vector_db_client),
+        db: Annotated[AsyncSession, Depends(get_db_session)],
+        qdrant: Annotated[AsyncQdrantClient, Depends(get_vector_db_client)],
+        config: Annotated[AppConfig, Depends(get_app_config)]
 ):
-    # 1. Fetch the vector of the original image by ID
-    response = await qdrant.retrieve(
-        collection_name="images",
-        ids=[str(image_id)],
+    # 1. Load metadata from DB
+    result = await db.execute(
+        select(ImageMetadata).join(Image).where(Image.id == image_id)
+    )
+    metadata = result.scalar_one_or_none()
+
+    if not metadata:
+        raise HTTPException(status_code=404, detail="Image metadata not found")
+
+    # 2. Load vector from Qdrant
+
+    qdrant_response = await qdrant.query_points(
+        collection_name=config.vector_db.collection,
+        query_filter=Filter(
+            must=[FieldCondition(key="image_id", match=MatchValue(value=str(image_id)))]
+        ),
+        limit=1,
         with_vectors=True,
         with_payload=True
     )
 
-    if not response or len(response) == 0 or response[0].vector is None:
+    points = qdrant_response.points
+    if not points or points[0].vector is None:
         raise HTTPException(status_code=404, detail="Image not found or missing vector")
 
-    query_vector = response[0].vector
+    vector = points[0].vector
+    features = ImageFeaturesSchema(
+        vector=vector,
+        dimension=len(vector)
+    )
 
-    # 2. Search for similar vectors
-    search_result = await qdrant.search(
-        collection_name="images",
-        query_vector=query_vector,
-        limit=top_k + 1,
+    # 3. Assemble response
+    return ImageSchema(
+        id=image_id,
+        metadata=ImageMetadataSchema(
+            filename=metadata.filename,
+            content_type=metadata.content_type,
+            size_bytes=metadata.size_bytes,
+            embedding_model=metadata.embedding_model
+        ),
+        features=features
+    )
+
+
+@router.get("/images/{image_id}/similar", response_model=list[ScoredImageSchema])
+async def get_similar_images(
+        image_id: uuid.UUID,
+        qdrant: Annotated[AsyncQdrantClient, Depends(get_vector_db_client)],
+        config: Annotated[AppConfig, Depends(get_app_config)],
+):
+    # 1. Fetch the original vector by payload filter
+    response = await qdrant.query_points(
+        collection_name=config.vector_db.collection,
+        query_filter=Filter(
+            must=[
+                FieldCondition(
+                    key="image_id",
+                    match=MatchValue(value=str(image_id))
+                )
+            ]
+        ),
+        limit=1,
+        with_vectors=True,
         with_payload=True
     )
 
-    # 3. Convert to response model, skipping the original image
+    points = response.points
+    if not points or points[0].vector is None:
+        raise HTTPException(status_code=404, detail="Image not found or missing vector")
+
+    query_vector = points[0].vector
+
+    # 2. Search similar vectors
+    response = await qdrant.query_points(
+        collection_name=config.vector_db.collection,
+        query_vector=query_vector,
+        limit=config.vector_db.top_k + 1,
+        with_payload=True,
+        with_vectors=False
+    )
+
     results: list[ScoredImageSchema] = []
-    for point in search_result:
-        if str(point.id) == str(image_id):
+    for point in response.points:
+        payload = point.payload or {}
+        raw_image_id = payload.get("image_id")
+        if not raw_image_id:
+            continue
+
+        if str(raw_image_id) == str(image_id):
             continue
 
         results.append(ScoredImageSchema(
-            id=uuid.UUID(str(point.id)),
+            id=uuid.UUID(str(raw_image_id)),
             score=point.score,
         ))
 
-        if len(results) >= top_k:
+        if len(results) >= config.vector_db.top_k:
             break
 
     return results

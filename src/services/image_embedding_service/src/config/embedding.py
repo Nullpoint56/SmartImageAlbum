@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class EmbeddingConfig(BaseModel):
+class EmbedderSettings(BaseModel):
     model_name: str

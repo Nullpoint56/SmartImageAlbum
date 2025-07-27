@@ -1,13 +1,12 @@
-from qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient
 
-from backend_service.config.vector_db import VectorDBConfig
+from config.app import get_app_config
 
 
-def get_vector_db_client(config: VectorDBConfig) -> QdrantClient:
-    global _qdrant_client
-    if _qdrant_client is None:
-        _qdrant_client = QdrantClient(
-            host=config.host,
-            port=config.port,
-        )
-    return _qdrant_client
+async def get_vector_db_client() -> AsyncQdrantClient:
+    config = get_app_config()
+    settings = config.vector_db
+    return AsyncQdrantClient(
+        host=settings.host,
+        port=settings.port,
+    )

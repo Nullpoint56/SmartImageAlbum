@@ -1,22 +1,22 @@
-# worker/Dockerfile
-
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS final
 
-WORKDIR /src
+WORKDIR /app
 
-# Copy only the necessary pyproject + lock files for dependency resolution
-COPY src/shared/pyproject.toml src/shared/uv.lock ./shared/
-COPY src/worker/pyproject.toml src/worker/uv.lock ./worker/
+# Copy both pyproject + source before installing
+COPY src/libraries/shared ./shared
+COPY src/services/backend_worker_service/pyproject.toml ./worker/
 
-# Install dependencies
-RUN uv pip install -r ./shared/pyproject.toml --system
+# Now it's safe to install the shared library
+RUN uv pip install ./shared --system
+
+# Install worker service (editable or normal)
 RUN uv pip install -e ./worker --system
 
-# Copy only the needed source code (shared + worker)
-COPY src/shared ./shared
-COPY src/worker ./worker
+# Copy worker source code
+COPY src/services/backend_worker_service/src ./worker
 
-# Ensure imports like `from shared...` work
-ENV PYTHONPATH=/src
+# Set up import paths
+ENV PYTHONPATH=/app/worker:/app/shared
 
-CMD ["celery", "-A", "worker.app.celery_app", "worker", "--loglevel=INFO"]
+CMD ["python", "-m", "celery", "-A", "app:celery_app", "worker", "--loglevel=INFO"]
+

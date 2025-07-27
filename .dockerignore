@@ -1,0 +1,56 @@
+# ───── Python ─────
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+*.py[cod]
+*.so
+**/.cache/
+transformers_cache/
+**/logs/
+*.log
+
+# ───── Virtual Environments ─────
+.venv/
+venv/
+env/
+ENV/
+**/.venv/
+**/venv/
+**/env/
+
+# ───── IDEs / Editors ─────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ───── System Files ─────
+.DS_Store
+Thumbs.db
+
+# ───── Git / Version Control ─────
+.git/
+.gitignore
+.gitattributes
+
+# ───── Project Artifacts ─────
+*.log
+logs/
+dist/
+build/
+.eggs/
+*.egg-info/
+
+# ───── Test / Coverage ─────
+.coverage
+.tox/
+htmlcov/
+.pytest_cache/
+tests/__snapshots__/
+
+# ───── Docker / Compose / CI ─────
+docker-compose.override.yml
+.dockerignore
+.env
+.env.*
