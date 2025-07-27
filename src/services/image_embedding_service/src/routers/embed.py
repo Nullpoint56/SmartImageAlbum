@@ -1,43 +1,34 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
-from fastapi.responses import JSONResponse
-from starlette.status import HTTP_400_BAD_REQUEST
-from PIL import Image
 from io import BytesIO
-import torch
-from transformers import CLIPProcessor, CLIPModel
+from typing import cast
 
-from image_embedding_service.dependencies import get_model_and_processor
+from PIL import Image
+from fastapi import APIRouter, HTTPException, Request
+from starlette.concurrency import run_in_threadpool
+
+from ai.model_management import CLIPEmbeddingService
+from schemas.embed import EncodeRequest, EncodeResponse
+from utils import get_image_bytes
 
 embed_router = APIRouter(prefix="", tags=["embedding"])
 
 
 @embed_router.post("/encode")
-async def encode_image(
-
-    deps: tuple[CLIPModel, CLIPProcessor, torch.device] = Depends(get_model_and_processor),
-) -> JSONResponse:
-    """
-    Accept an image and return the embedding vector.
-
-    Args:
-        file (UploadFile): The uploaded image.
-        deps (tuple): Injected (model, processor, device)
-
-    Returns:
-        JSONResponse: Embedding as list of floats.
-    """
-    model, processor, device = deps
-
+async def encode_image(request: Request, payload: EncodeRequest) -> EncodeResponse:
+    # TODO: Add caching by image_id and model_id
     try:
-        contents = await file.read()
-        image = Image.open(BytesIO(contents)).convert("RGB")
-    except Exception:
-        raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid image format")
+        image_bytes = await get_image_bytes(str(payload.image_url))
 
-    inputs = processor(images=image, return_tensors="pt").to(device)
+        def blocking_pipeline() -> EncodeResponse:
+            image = Image.open(BytesIO(image_bytes)).convert("RGB")
+            model_service = cast(CLIPEmbeddingService, request.state.model_service)
+            embedding = model_service.encode(image)
+            return EncodeResponse(
+                image_id=payload.image_id,
+                model_name=model_service.model_id,
+                embedding=embedding,
+            )
 
-    with torch.no_grad():
-        features = model.get_image_features(**inputs)
-        normalized = features[0] / features[0].norm()
+        return await run_in_threadpool(blocking_pipeline)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    return JSONResponse(content={"embedding": normalized.cpu().tolist()})
