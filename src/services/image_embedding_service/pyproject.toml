@@ -8,12 +8,15 @@ authors = [
 dependencies = [
     "fastapi",
     "uvicorn[standard]",
-    "transformers",
-    "torch",
+    "transformers[torch]",
+    "torch==2.6.0+cpu",
     "Pillow",
     "python-multipart",
     "aiohttp>=3.12.14",
-    "pydantic-settings>=2.10.1",
+    "pydantic-settings>=2.1.0",
 ]
+
 requires-python = ">=3.11.0"
 
+[tool.uv]
+extra-index-url = ["https://download.pytorch.org/whl/cpu"]
