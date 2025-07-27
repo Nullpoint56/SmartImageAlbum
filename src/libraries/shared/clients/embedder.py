@@ -1,33 +1,19 @@
-import uuid
-from typing import List
 from pydantic import BaseModel, HttpUrl, AnyUrl
 import httpx
 import logging
-
-
-class EmbeddingRequest(BaseModel):
-    image_id: uuid.UUID
-    url: HttpUrl
-
-
-class EmbeddingResponse(BaseModel):
-    image_id: uuid.UUID
-    model_name: str
-    embedding: List[float]
-    dimension: int
-
+from custom_types.schemas import EmbeddingRequest, EmbeddingResponse
 
 class EmbedderClient:
     """
     Client for communicating with the Embedding Service over HTTP.
     """
 
-    def __init__(self, base_url: AnyUrl):
+    def __init__(self, base_url: str):
         """
         Initialize the client with the base URL of the embedding service.
 
         Args:
-            base_url (AnyUrl): Base URL of the embedding service.
+            base_url (str): Base URL of the embedding service.
         """
         self.base_url = base_url
         self.logger = logging.getLogger(__name__)
@@ -50,7 +36,7 @@ class EmbedderClient:
 
         with httpx.Client() as client:
             try:
-                response = client.post(url, json=request.model_dump())
+                response = client.post(url, json=request.model_dump(mode="json"))
                 response.raise_for_status()
                 return EmbeddingResponse(**response.json())
             except httpx.HTTPError as e:

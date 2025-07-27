@@ -1,23 +1,28 @@
-import uuid
 from datetime import datetime, UTC
-
-from shared.custom_types.enums import JobStatus
-from shared.models.jobs import ImageProcessingJob, JobStep
-from shared.custom_types.enums import JobStepName
+import uuid
 
 from app import celery_app
-from dependencies import WorkerContext
-from executors import STEP_EXECUTORS
 from config import WorkerConfig
+from dependencies import WorkerContext
+from shared.custom_types.enums import JobStatus, JobStepName
+from shared.models.jobs import ImageProcessingJob, JobStep
+
+from steps import run_embed
+from steps import run_index
 
 
 @celery_app.task(name="process_image", autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
 def process_image(image_id: uuid.UUID):
-    steps_to_run = [JobStepName.EMBEDDING, JobStepName.INDEXING]
+    # Define steps inline with corresponding logic
+    steps_to_run = {
+        JobStepName.EMBEDDING: run_embed,
+        JobStepName.INDEXING: run_index,
+    }
+
     config = WorkerConfig()
     ctx = WorkerContext(config)
 
-    # Create job record
+    # Create a new job with configured steps
     job = ImageProcessingJob(
         image_id=image_id,
         status=JobStatus.PROCESSING,
@@ -29,17 +34,15 @@ def process_image(image_id: uuid.UUID):
     ctx.db.add(job)
     ctx.db.commit()
 
-    # Shared execution state
-    state = {}
+    state = {}  # Shared memory between steps
 
     for step in sorted(job.steps, key=lambda s: s.step_index):
         if step.done:
             continue
-
         try:
             step.started_at = datetime.now(UTC)
-            fn = STEP_EXECUTORS[step.step_name]
-            fn(job=job, step=step, ctx=ctx, state=state)
+            step_fn = steps_to_run[step.step_name]
+            step_fn(job=job, ctx=ctx, state=state)
             step.done = True
             step.finished_at = datetime.now(UTC)
             ctx.db.commit()
@@ -53,4 +56,5 @@ def process_image(image_id: uuid.UUID):
     if job.is_completed:
         job.status = JobStatus.DONE
         ctx.db.commit()
+
     ctx.close()

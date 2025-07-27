@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from minio import Minio
 from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue, ScoredPoint
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
@@ -115,14 +115,14 @@ async def get_image(
 
 @router.get("/images/{image_id}/similar", response_model=list[ScoredImageSchema])
 async def get_similar_images(
-        image_id: uuid.UUID,
-        qdrant: Annotated[AsyncQdrantClient, Depends(get_vector_db_client)],
-        config: Annotated[AppConfig, Depends(get_app_config)],
+    image_id: uuid.UUID,
+    qdrant: Annotated[AsyncQdrantClient, Depends(get_vector_db_client)],
+    config: Annotated[AppConfig, Depends(get_app_config)],
 ):
-    # 1. Fetch the original vector by payload filter
-    response = await qdrant.query_points(
+    # 1. Fetch original image vector using payload filter
+    scroll_result = await qdrant.scroll(
         collection_name=config.vector_db.collection,
-        query_filter=Filter(
+        scroll_filter=Filter(
             must=[
                 FieldCondition(
                     key="image_id",
@@ -132,39 +132,36 @@ async def get_similar_images(
         ),
         limit=1,
         with_vectors=True,
-        with_payload=True
+        with_payload=True,
     )
 
-    points = response.points
-    if not points or points[0].vector is None:
-        raise HTTPException(status_code=404, detail="Image not found or missing vector")
+    if not scroll_result or not scroll_result[0]:
+        raise HTTPException(status_code=404, detail="Image not found")
 
-    query_vector = points[0].vector
+    point = scroll_result[0][0]
+    query_vector = point.vector
+    if query_vector is None:
+        raise HTTPException(status_code=404, detail="Vector not found for image")
 
-    # 2. Search similar vectors
+    # 2. Use query_points for similarity search (replacement for search)
     response = await qdrant.query_points(
         collection_name=config.vector_db.collection,
         query_vector=query_vector,
         limit=config.vector_db.top_k + 1,
+        with_vectors=False,
         with_payload=True,
-        with_vectors=False
     )
 
     results: list[ScoredImageSchema] = []
     for point in response.points:
         payload = point.payload or {}
         raw_image_id = payload.get("image_id")
-        if not raw_image_id:
+        if not raw_image_id or str(raw_image_id) == str(image_id):
             continue
-
-        if str(raw_image_id) == str(image_id):
-            continue
-
         results.append(ScoredImageSchema(
             id=uuid.UUID(str(raw_image_id)),
             score=point.score,
         ))
-
         if len(results) >= config.vector_db.top_k:
             break
 

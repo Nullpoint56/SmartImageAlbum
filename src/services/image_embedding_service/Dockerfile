@@ -1,26 +1,23 @@
 FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS final
 
-# Install system dependencies for image processing
-RUN apt-get update && apt-get install -y \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
 WORKDIR /app
 
-# Copy only dependency metadata
-COPY src/services/image_embedding_service/pyproject.toml ./pyproject.toml
+# Copy shared library first
+COPY src/libraries/shared ./shared
+COPY src/services/image_embedding_service ./embedder
 
-# Install all dependencies into system site-packages (required for uv + Docker)
-RUN uv pip install . --system
+# Now it's safe to install the shared library
+RUN uv pip install ./shared --system
 
-# Copy the actual source code
-COPY src/services/image_embedding_service/src ./src
+# Install embedder service (regular mode, not -e)
+RUN uv pip install -e ./embedder --system
 
-# Set environment variables
-ENV PYTHONPATH=/app/src
+# Copy embedder source code
+COPY src/services/image_embedding_service/src ./embedder
+
+# Set import paths and model caching
+ENV PYTHONPATH=/app/embedder:/app/shared
 ENV TRANSFORMERS_NO_TF=1
 ENV TRANSFORMERS_CACHE=/app/.cache
 
-# Run the FastAPI app via uvicorn (as a module to ensure correct loading)
 CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
