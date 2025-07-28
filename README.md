@@ -27,6 +27,11 @@ docker compose -f deployments/docker-compose.yml up -d
 ![SmartImageAlbum Architecture](./docs/sources/architecture/architecture_diagram.png)
 See the [architecture documentation](./docs/architecture_documentation.md) for detailed diagrams and service roles.
 
+## 📄 Technology choices justification
+
+Checkout the [tooling justification documentation](./docs/tooling_justification.md) for more details.
+
+
 ## 🔍 Usage
 
 * **Upload** an image: `POST /images/upload`
