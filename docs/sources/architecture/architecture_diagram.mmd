@@ -2,7 +2,7 @@ flowchart LR
   %% Nodes
   Client([Client])
   API["API Service"]
-  WORKER["Arq Worker Service"]
+  WORKER["Worker Service"]
   EMBED["Embedding Service"]
 
   %% Infrastructure as subgraph (horizontal arrangement)
@@ -12,7 +12,6 @@ flowchart LR
     VECTOR_DB["Vector DB"]
     REDIS["Redis Queue"]
     APP_DB["Backend DB"]
-    EMBED_DB["Embedder DB"]
   end
 
   %% Main left-to-right service path
@@ -23,7 +22,6 @@ flowchart LR
   %% API data flow to infrastructure
   API -.->|Store/Fetch image| OBJ_STORE
   API -.->|Query similar vectors| VECTOR_DB
-  API -.->|Query job status| APP_DB
 
   %% API job queue
   API -.->|Submit job to queue| REDIS
@@ -35,7 +33,6 @@ flowchart LR
   WORKER -.->|Request embedding| EMBED
 
   EMBED -.->|Download image| OBJ_STORE
-  EMBED -.->|Use/Store vector cache| EMBED_DB
 
   %% REDIS triggers Worker
   REDIS -->|Job| WORKER
@@ -48,4 +45,3 @@ flowchart LR
   style VECTOR_DB fill:#eee,stroke:#333,stroke-width:1px
   style REDIS fill:#eee,stroke:#333,stroke-width:1px
   style APP_DB fill:#e5f5e0,stroke:#333,stroke-width:1px
-  style EMBED_DB fill:#fdf5e6,stroke:#333,stroke-width:1px

@@ -5,7 +5,6 @@ sequenceDiagram
   participant OBJ as Object Store
   participant WORKER as Worker Service
   participant EMBED as Embedding Service
-  participant EMBEDDB as Embedding DB
   participant VECTOR as Vector DB
   participant DB as Backend DB
 
@@ -16,11 +15,11 @@ sequenceDiagram
 
   WORKER->>DB: Create job: status = "created", state = "none"
   WORKER->>DB: Update status = "pending", state = "embedding"
-  WORKER->>EMBED: Send image to embed
+  WORKER->>EMBED: Send encode request
 
   EMBED->>OBJ: Download image
-  EMBED->>EMBEDDB: Store enbedding
   EMBED->>WORKER: Return embedding vector
+
 
   WORKER->>DB: Update state = "indexing"
   WORKER->>VECTOR: Insert vector

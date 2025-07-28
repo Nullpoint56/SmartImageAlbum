@@ -2,10 +2,10 @@ sequenceDiagram
   autonumber
   participant Client
   participant API as API Service
-  participant OBJ as Object Store
   participant VECTOR as Vector DB
+  participant DB as Backend DB
 
   Client->>API: GET /images/{image_id}
-  API->>OBJ: Fetch image metadata (e.g., size, upload time)
+  API->>DB: Fetch image metadata
   API->>VECTOR: Fetch feature vector
   API-->>Client: Return metadata + features
