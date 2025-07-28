@@ -16,7 +16,6 @@ flowchart LR
 
   %% Main left-to-right service path
   Client -->|Upload/Get image/Similar| API
-  API -->|Submit job| WORKER
   WORKER -->|Embedding| EMBED
 
   %% API data flow to infrastructure

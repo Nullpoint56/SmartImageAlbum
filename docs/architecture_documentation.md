@@ -100,7 +100,7 @@ Tracks the state of image processing jobs.
 
 1. **Upload:** Client uploads image to API → stored in Object Store
 2. **Job Submission:** API pushes job to Redis queue
-3. **Processing:** Arq Worker pulls job → fetches image → sends to Embedder
+3. **Processing:** Worker pulls job → fetches image → sends to Embedder
 4. **Embedding:** Embedding Service returns vector → Worker inserts into Vector DB
 5. **Tracking:** Worker updates Backend DB with job state transitions
 6. **Query:** API handles similarity search and metadata/status retrieval for client
