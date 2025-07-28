@@ -46,6 +46,12 @@ Checkout the [tooling justification documentation](./docs/tooling_justification.
 * Centralized configuration service for all components
 
 ## License
-This project is licensed under the Business Source License 1.1 – see the [LICENSE](./LICENSE) file for details.
 
-**🚫 Not for commercial/production use without explicit permission.**
+This project is licensed under a custom **"All Rights Reserved"** license.
+
+Copyright © 2025 [Szombathy Tamás]
+
+This software is provided for **educational and evaluation purposes only**.  
+🚫 **Commercial or production use is strictly prohibited** without prior written permission from the author.
+
+See the [LICENSE](./LICENSE) file for full terms.
