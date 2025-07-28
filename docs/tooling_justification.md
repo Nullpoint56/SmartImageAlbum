@@ -71,10 +71,34 @@ in the [Architecture Documentation](./architecture_documentation.md) and project
 
 ---
 
+## 4. Task Orchestration: **Celery**
+
+### ✅ Justification
+
+* **Purpose**: Manages background task execution and supports long-running and scheduled jobs.
+* **Selected Tool**: [Celery](https://docs.celeryq.dev/en/stable/)
+
+### 🔍 Why Celery?
+
+* **Scheduling Support**: Native support for periodic tasks (via Celery Beat) allows for time-based workflows without extra tooling.
+* **Proven Stability**: Industry-standard task queue system with a large community and track record in production.
+* **Retry and Failure Handling**: Rich capabilities for retries, acknowledgments, and task expiration.
+* **Observability**: Compatible with tools like Flower for live monitoring, and integrates with Prometheus exporters.
+* **Pluggable Backends**: Supports Redis, RabbitMQ, and others as brokers and result stores.
+
+### 🔄 Alternatives Considered
+
+* **Arq**: Lightweight and async-friendly, but lacks built-in scheduling and has more limited ecosystem support.
+* **RQ**: Simpler and Pythonic, but less robust for advanced features like retries, prioritization, and monitoring.
+* **Temporal**: More powerful, but significantly more complex to set up and manage for current project needs.
+
+Celery offers the right balance between capability and maintainability for our use case. It handles the orchestration of the image processing pipeline reliably while remaining extendable and production-ready.
+
+---
+
 ## Conclusion
 
-The selected tools—**Qdrant**, **MinIO**, and a **custom Hugging Face Transformers-based Embedding Service**—align with
-our architecture's goals of modularity, async-first processing, and cloud-native deployment. They enable scalable,
+The selected tools—**Qdrant**, **MinIO**, **a custom Hugging Face Transformers-based Embedding Service**, and **Celery**—align with our architecture's goals of modularity, async-first processing, and cloud-native deployment. They enable scalable,
 containerized development with clean service boundaries and strong observability potential.
 
 Future improvements, such as switching to managed services or integrating a workflow engine like Temporal, can be easily

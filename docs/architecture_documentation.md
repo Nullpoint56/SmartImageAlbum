@@ -28,19 +28,20 @@ Handles client-facing HTTP endpoints for image upload, metadata retrieval, and s
 
 ---
 
-### 2. **Worker Service (Arq)**
+### 2. **Worker Service (Celery)**
 
-Handles asynchronous image processing workflows as background tasks.
+Handles image processing workflows as background tasks.
 
 **Responsibilities:**
 
 * Poll Redis for new image processing jobs
-* Fetch image objects from the object store
-* Send image data to the Embedding Service
+* Generate a temporary access url for the image
+* Send an /encode request to the Embedding Service
 * Store resulting feature vectors in the Vector DB
 * Maintain and update job state in the Backend DB
 
-**Note:** This service is horizontally scalable and can be deployed independently from the API. It replaces the need for a custom Coordinator Service, and can be replaced with a workflow engine like Temporal in the future if needed.
+**Note:** This service is horizontally scalable and is deployed independently of the API. 
+If demand and complexity grows, it can be replaced by a workflow engine like Temporal in the future if needed.
 
 ---
 
