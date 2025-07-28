@@ -18,10 +18,10 @@ from shared.models import Image
 from shared.models.image import ImageMetadata
 from utils import send_celery_task_async, upload_file_to_minio
 
-router = APIRouter()
+image_router = APIRouter(prefix="/images", tags=["images"])
 
 
-@router.post("/images/upload", response_model=dict)
+@image_router.post("/upload", response_model=dict)
 async def upload_image(
         file: Annotated[UploadFile, File(...)],
         db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -62,7 +62,7 @@ async def upload_image(
         )
 
 
-@router.get("/images/{image_id}", response_model=ImageSchema)
+@image_router.get("/{image_id}", response_model=ImageSchema)
 async def get_image(
         image_id: uuid.UUID,
         db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -113,7 +113,7 @@ async def get_image(
     )
 
 
-@router.get("/images/{image_id}/similar", response_model=list[ScoredImageSchema])
+@image_router.get("/{image_id}/similar", response_model=list[ScoredImageSchema])
 async def get_similar_images(
     image_id: uuid.UUID,
     qdrant: Annotated[AsyncQdrantClient, Depends(get_vector_db_client)],

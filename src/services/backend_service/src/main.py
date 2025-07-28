@@ -5,7 +5,8 @@ from fastapi import FastAPI
 from config.app import get_app_config
 from db import engine
 from dependencies.logging import setup_logging
-from routers.images import router
+from routers.images import image_router
+from routers.service_management import service_management_router
 from utils import init_minio_bucket, init_vector_db_collection, create_schema
 
 
@@ -31,4 +32,5 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan, docs_url="/api/docs", debug=True)
 
 # Routers
-app.include_router(router)
+app.include_router(image_router)
+app.include_router(service_management_router)
