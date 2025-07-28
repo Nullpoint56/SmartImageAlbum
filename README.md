@@ -44,3 +44,8 @@ Checkout the [tooling justification documentation](./docs/tooling_justification.
 * Docker image optimizations for smaller deployment footprint
 * Web-based interface for album browsing and management
 * Centralized configuration service for all components
+
+## License
+This project is licensed under the Business Source License 1.1 – see the [LICENSE](./LICENSE) file for details.
+
+**🚫 Not for commercial/production use without explicit permission.**
