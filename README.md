@@ -12,7 +12,6 @@ SmartImageAlbum is a cloud-native, horizontally scalable microservices backend f
 
 ### Prerequisites
 
-* Python 3.9+
 * Docker Desktop
 
 ### Local Deployment with Docker
