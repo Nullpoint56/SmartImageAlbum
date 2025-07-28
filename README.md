@@ -24,7 +24,7 @@ docker compose -f deployments/docker-compose.yml up -d
 ```
 
 ## 🏗️ Architecture
-![SmartImageAlbum Architecture](./docs/sources/architecture/architecture_diagram.svg)
+![SmartImageAlbum Architecture](./docs/sources/architecture/architecture_diagram.png)
 See the [architecture documentation](./docs/architecture_documentation.md) for detailed diagrams and service roles.
 
 ## 🔍 Usage
