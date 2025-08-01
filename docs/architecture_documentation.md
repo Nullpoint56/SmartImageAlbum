@@ -22,7 +22,7 @@ Handles client-facing HTTP endpoints for image upload, metadata retrieval, and s
 **Responsibilities:**
 
 * Accept image uploads and store them in the object store
-* Submit image processing jobs to the Redis-backed Arq queue
+* Submit image processing jobs to the Redis-backed Worker queue
 * Query the Backend DB for image metadata and job status
 * Perform similarity search using the Vector DB
 
